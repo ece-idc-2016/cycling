@@ -1,10 +1,10 @@
-//Accelerometer Sensor
-//Matt @ http://antipastohw.blogspot.com/
-//Author of original code base: Marcos Yarza, Malmo University - Sweden, http://www.0j0.org
-//edits by david betancourt and heightValue torvalds
+//patricia torvalds and david betancourt 2016
 
 //begin line following variables
-#include <Servo.h>                           // Use the Servo library (included with Arduino IDE)  
+#include <Servo.h>                           // Use the Servo library (included with Arduino IDE)
+#include <SoftwareSerial.h>
+
+//line following global variables
 Servo servoL;                                // Define the left and right servos
 Servo servoR;
 
@@ -14,10 +14,8 @@ int centerRP = 6;
 int farRP = 7;
 int Left = 0;
 int Right = 0;
-//end line following variables
 
-//begin xbee variables
-#include <SoftwareSerial.h>
+//xbee global variables
 #define Rx 10 // DOUT to pin 10
 #define Tx 11 // DIN to pin 11
 #define LED4 31 // change to fit your own LED configuration
@@ -28,36 +26,31 @@ int led = 3; // this may vary based on your hardware configuration.
 int button = 9; // this may vary based on your hardware configuration.
 
 SoftwareSerial Xbee (Rx, Tx);
-//end xbee variables
 
 //Pin definitions
 int xaccPin = 8;
 int yaccPin = 49;
 int heightValue = 5;
 
-//Global variables
+//Global height variables
 long xacc = 0;
 long yacc = 0;
-
-#include <SoftwareSerial.h>
-#define Rx 10 // DOUT to pin 10
-#define Tx 11 // DIN to pin 11
 
 void setup() {
   Serial.begin(9600); // Sets the baud rate to 9600
   Xbee.begin(9600); // type a char, then hit enter
-  delay(500); // wait half a second
-  servoL.attach(13);                         // Attach (programmatically connect) servos to pins on Arduino
+
+  servoL.attach(13);                         // Attach servos to pins on Arduino
   servoR.attach(12);
+  
+  //define pinmodes xbee, button, led
   pinMode(led, OUTPUT);
   pinMode(button, INPUT);
   pinMode(LED4, OUTPUT);
   pinMode(LED3, OUTPUT);
   pinMode(LED2, OUTPUT);
   pinMode(LED1, OUTPUT);
-  delay(500); // wait half a second
-  pinMode(led, OUTPUT);
-  pinMode(button, INPUT);
+  // 7 segment display
   pinMode(31, OUTPUT);
   pinMode(32, OUTPUT);
   pinMode(33, OUTPUT);
@@ -65,13 +58,18 @@ void setup() {
   pinMode(35, OUTPUT);
   pinMode(36, OUTPUT);
   pinMode(37, OUTPUT);
+  
+  // accelerometer
   pinMode(xaccPin, INPUT);
   pinMode(yaccPin, INPUT);
 
   //clear the initial pin readouts
-  digitalWrite(31, LOW); digitalWrite(32, LOW);
-  digitalWrite(33, LOW); digitalWrite(34, LOW);
-  digitalWrite(35, LOW); digitalWrite(36, LOW);
+  digitalWrite(31, LOW); 
+  digitalWrite(32, LOW);
+  digitalWrite(33, LOW); 
+  digitalWrite(34, LOW);
+  digitalWrite(35, LOW); 
+  digitalWrite(36, LOW);
   digitalWrite(37, LOW);
 }
 
@@ -88,6 +86,8 @@ long RCTime(int sensorIn) {
   }
   return duration;
 }
+
+//line following calibration
 int isHighfR(int rctime) {
   if (rctime < 5)
     return 0;
@@ -113,7 +113,7 @@ int isHighfL(int rctime) {
     return 1;
 }
 
-
+// accelerometer stuff
 long readAcceleration(int axe) {
   int count = 0;
   long accel = 0;
@@ -165,8 +165,7 @@ void loop() {
   int pin1 = isHighCR(RCTime(centerRP));
   int pin2 = isHighCL(RCTime(centerLP));
   int pin3 = isHighfL(RCTime(farLP));
-  Serial.println(RCTime(centerLP));
-  //Serial.println(isHighCR(RCTime(farRP)));
+//Serial.println(RCTime(centerLP));
   String s = String(pin1) + String(pin2) + String(pin3) + String(pin4);
   int pins = s.toInt();
   Serial.println(pins);
@@ -178,70 +177,97 @@ void loop() {
     case 1000:
       vL = -200;                             // -100 to 100 indicate course correction values
       vR = 200;                              // -100: full reverse; 0=stopped; 100=full forward
-      Left = Left + 1;
+      servoL.writeMicroseconds(1500 + vL);      // Steer robot to recenter it over the line
+      servoR.writeMicroseconds(1500 - vR);
+      delay(50);
       break;
     case 1100:
       vL = -200;
       vR = 0;
-      Left = Left + 1;
+      servoL.writeMicroseconds(1500 + vL);      // Steer robot to recenter it over the line
+      servoR.writeMicroseconds(1500 - vR);
+      delay(50);
       break;
     case 101:
       vL = -200;
       vR = -200;
+      servoL.writeMicroseconds(1500 + vL);      // Steer robot to recenter it over the line
+      servoR.writeMicroseconds(1500 - vR);
+      delay(50);
+      break; //DID NOT DO THIS BEFORE
     case 1010:
       vL = 200;
       vR = 200;
+      servoL.writeMicroseconds(1500 + vL);      // Steer robot to recenter it over the line
+      servoR.writeMicroseconds(1500 - vR);
+      delay(50);
+      break; //DID NOT DO THIS BEFORE
     case 100:
       vL = -200;
       vR = 200;
-      Left = Left + 1;
+      servoL.writeMicroseconds(1500 + vL);      // Steer robot to recenter it over the line
+      servoR.writeMicroseconds(1500 - vR);
+      delay(50);
       break;
     case 110:
       vL = 100;
       vR = 100;
+      servoL.writeMicroseconds(1500 + vL);      // Steer robot to recenter it over the line
+      servoR.writeMicroseconds(1500 - vR);
+      delay(50);
       break;
     case 10:
       vL = 200;
       vR = 200;
+      servoL.writeMicroseconds(1500 + vL);      // Steer robot to recenter it over the line
+      servoR.writeMicroseconds(1500 - vR);
+      delay(50);
       break;
     case 11:
       vL = 0;
       vR = -200;
-      Right = Right + 1;
+      servoL.writeMicroseconds(1500 + vL);      // Steer robot to recenter it over the line
+      servoR.writeMicroseconds(1500 - vR);
+      delay(50);
       break;
     case 1:
       vL = 200;
       vR = -200;
-      Right = Right + 1;
+      servoL.writeMicroseconds(1500 + vL);      // Steer robot to recenter it over the line
+      servoR.writeMicroseconds(1500 - vR);
+      delay(50);
       break;
     case 1110:
       vL = -200;
       vR = 200;
-      Left = Left + 1;
+      servoL.writeMicroseconds(1500 + vL);      // Steer robot to recenter it over the line
+      servoR.writeMicroseconds(1500 - vR);
+      delay(50);
       break;
     case 111:
       vL = 200;
       vR = -200;
-      Right = (Right + 1);
+      servoL.writeMicroseconds(1500 + vL);      // Steer robot to recenter it over the line
+      servoR.writeMicroseconds(1500 - vR);
+      delay(50);
       break;
     case 1111:
       servoL.writeMicroseconds(1300);         // Left wheel counterclockwise REMOVED FOR 4/7 DEMO, PUT BACK AFTER
       servoR.writeMicroseconds(1300);        // Right wheel clockwise
-      delay(650); //this may change                               // ...for 3 seconds
+      delay(650); //this may change           // ...for x microseconds
       servoL.detach();                        // Stop sending servo signals
       servoR.detach();
-
       break;
     case 0000:
       vL = 0;
       vR = 0;
+      servoL.writeMicroseconds(1500 + vL);      // Steer robot to recenter it over the line
+      servoR.writeMicroseconds(1500 - vR);
+      delay(50);
       break;
   }
 
-  servoL.writeMicroseconds(1500 + vL);      // Steer robot to recenter it over the line
-  servoR.writeMicroseconds(1500 - vR);
 
-  delay(50);
 
   //begin xbee loop code (button)
   int pushed = 0; // the button is *not* pushed by default
