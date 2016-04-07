@@ -1,0 +1,49 @@
+/*
+   Credits: Joyce Choi
+*/
+
+#include <SoftwareSerial.h>
+#define Rx 10 // DOUT to pin 10
+#define Tx 11 // DIN to pin 11
+int led = 3; // this may vary based on your hardware configuration.
+int button = 9; // this may vary based on your hardware configuration.
+int heightValue = 5;
+
+SoftwareSerial Xbee (Rx, Tx);
+
+void setup() {
+  Serial.begin(9600); // Set to No line ending;
+  Xbee.begin(9600); // type a char, then hit enter
+  delay(500); // wait half a second
+  pinMode(led, OUTPUT);
+  pinMode(button, INPUT);
+}
+void loop() {
+  int pushed = 0; // the button is *not* pushed by default
+  pushed = digitalRead(button);
+  if (heightValue == 0) { // Is the button pushed?
+    char outgoing = '0'; // sets outgoing character to s
+    Xbee.print(outgoing);
+    delay(500);
+  }
+  else if (heightValue == 1) {
+    char outgoing = '1';
+    Xbee.print(outgoing);
+    delay(500);
+  }
+  else if (heightValue == 2) {
+    char outgoing = '2';
+    Xbee.print(outgoing);
+    delay(500);
+  }
+  if (Xbee.available()) { // Is data a vailable from XBee?
+      char incoming = Xbee.read(); // Read character,
+      Serial.println(incoming); // send to Serial Monitor
+      if (incoming) {
+        digitalWrite(led, HIGH); // switches on the light if signal is received
+        delay(500); // waits half a second
+        digitalWrite(led, LOW); // turns off LED
+      }
+    }
+  delay(50);
+}
